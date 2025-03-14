@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "XLwcdGmX+YvV7IOq+BL+vEPlLzhmYWAEtIlt1f0hHYg=",
+  "Source": "aspnetcorehub",
+  "BasePath": "_content/aspnetcorehub",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/boyarkogc/Projects/farm_iot_project/main-server/main-server.csproj": {}
+    "/home/boyarkogc/Projects/farm_iot_project/aspnetcorehub/aspnetcorehub.csproj": {}
   },
   "projects": {
-    "/home/boyarkogc/Projects/farm_iot_project/main-server/main-server.csproj": {
+    "/home/boyarkogc/Projects/farm_iot_project/aspnetcorehub/aspnetcorehub.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/boyarkogc/Projects/farm_iot_project/main-server/main-server.csproj",
-        "projectName": "main-server",
-        "projectPath": "/home/boyarkogc/Projects/farm_iot_project/main-server/main-server.csproj",
+        "projectUniqueName": "/home/boyarkogc/Projects/farm_iot_project/aspnetcorehub/aspnetcorehub.csproj",
+        "projectName": "aspnetcorehub",
+        "projectPath": "/home/boyarkogc/Projects/farm_iot_project/aspnetcorehub/aspnetcorehub.csproj",
         "packagesPath": "/home/boyarkogc/.nuget/packages/",
-        "outputPath": "/home/boyarkogc/Projects/farm_iot_project/main-server/obj/",
+        "outputPath": "/home/boyarkogc/Projects/farm_iot_project/aspnetcorehub/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/boyarkogc/.nuget/NuGet/NuGet.Config"
@@ -44,20 +44,6 @@
       "frameworks": {
         "net9.0": {
           "targetAlias": "net9.0",
-          "dependencies": {
-            "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[9.0.2, )"
-            },
-            "Microsoft.EntityFrameworkCore.InMemory": {
-              "target": "Package",
-              "version": "[9.0.2, )"
-            },
-            "NSwag.AspNetCore": {
-              "target": "Package",
-              "version": "[14.2.0, )"
-            }
-          },
           "imports": [
             "net461",
             "net462",
