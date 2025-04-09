@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import farmImage from "@/assets/farm1.jpg";
+import farmImage from "@/assets/optimized/farm1.jpg";
 import { useAuth } from "./auth-provider";
 import { useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";

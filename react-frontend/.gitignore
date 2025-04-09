@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 # Env variables
 .env*
+#firebase
+firebase*

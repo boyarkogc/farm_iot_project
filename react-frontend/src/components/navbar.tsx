@@ -1,11 +1,11 @@
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function NavBar() {
   const { user, logout } = useAuth();
-  const location = useLocation();
+  //const location = useLocation();
 
   const handleLogout = async (): Promise<void> => {
     try {

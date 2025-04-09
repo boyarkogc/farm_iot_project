@@ -52,7 +52,9 @@ if (useEmulators) {
   // Default port is 9099.
   try {
     // Using 127.0.0.1 instead of localhost can sometimes avoid specific network resolution issues
-    connectAuthEmulator(auth, "http://127.0.0.1:9099");
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", {
+      disableWarnings: true,
+    });
     console.log("Successfully connected to Auth Emulator.");
   } catch (error) {
     console.error("Error connecting to Auth Emulator:", error);

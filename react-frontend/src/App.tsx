@@ -1,23 +1,33 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "./components/auth-provider";
 import { LoginForm } from "./components/login-form";
-import NavBar from "@/components/ui/navbar";
-import Footer from "@/components/ui/footer";
-import Dashboard from "@/components/dashboard";
+import NavBar from "@/components/navbar";
+import Footer from "@/components/footer";
 import ProtectedRoute from "./components/protected-route";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
+const Dashboard = lazy(() => import("@/components/dashboard"));
 function App() {
+  console.log("App");
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
         <BrowserRouter>
           <NavBar />
           <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginForm isSignup={false} />} />
             <Route path="/signup" element={<LoginForm isSignup={true} />} />
             <Route path="/dashboard" element={<ProtectedRoute />}>
-              <Route index element={<Dashboard />} />
+              <Route
+                index
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Dashboard />
+                  </Suspense>
+                }
+              />
             </Route>
           </Routes>
           <Footer />

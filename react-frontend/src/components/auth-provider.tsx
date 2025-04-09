@@ -63,7 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      setIsAuthReady(false);
+      setIsAuthReady(true); // This should be set to true when auth state is determined
     });
 
     return () => unsubscribe();
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!isAuthReady && children}
+      {isAuthReady ? children : <div>Loading authentication...</div>}
     </AuthContext.Provider>
   );
 }

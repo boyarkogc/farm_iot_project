@@ -46,6 +46,7 @@
     "react-firebase-hooks": "^5.1.1",
     "react-router-dom": "^7.4.1",
     "recharts": "^2.15.2",
+    "sharp": "^0.34.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.17",
