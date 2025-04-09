@@ -3,3 +3,9 @@ This project is using the following libraries and frameworks
 1. Vite as a build tool
 2. React
 3. Shadcn as a UI library
+
+Commands
+
+firebase emulators:start --import=./fb-data --export-on-exit=./fb-data
+
+bun run dev
