@@ -23,8 +23,8 @@ type AuthContextType = {
 
 const initialValue: AuthContextType = {
   user: null,
-  signUp: async () => new Promise(() => {}), // Promise that never resolves
-  login: async () => new Promise(() => {}), // Promise that never resolves
+  signUp: async () => new Promise(() => { }), // Promise that never resolves
+  login: async () => new Promise(() => { }), // Promise that never resolves
   logout: async () => Promise.resolve(),
   isAuthenticating: false,
 };
@@ -39,6 +39,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  console.log("auth provider loading")
 
   function signUp(email: string, password: string) {
     console.log("test");

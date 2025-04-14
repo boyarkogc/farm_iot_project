@@ -1,0 +1,17 @@
+# Node modules (these are installed within the container)
+node_modules
+
+# Build output (this is generated within the container)
+dist
+build
+
+# Git directory
+.git
+
+# Docker files
+Dockerfile
+.dockerignore
+
+# Environment variables (handle these securely, don't copy into image)
+.env
+.env.*

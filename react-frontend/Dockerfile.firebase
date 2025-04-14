@@ -1,0 +1,10 @@
+FROM node:18-alpine
+RUN npm install -g firebase-tools
+WORKDIR /app
+COPY firebase.json .
+#Auth port
+EXPOSE 9099
+#UI
+EXPOSE 4000
+
+CMD firebase emulators:start --only auth --import=./fb-data --export-on-exit=./fb-data --project=demo-auth-project
