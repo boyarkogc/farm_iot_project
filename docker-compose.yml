@@ -1,0 +1,37 @@
+services:
+  firebase-auth-emulator:
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile.firebase
+    ports:
+      # Map host ports to container ports
+      - "9099:9099" # Auth Emulator
+      - "4000:4000" # Emulator UI
+    volumes:
+      # Mount a local directory into the container for persistence
+      # Creates 'fb-data' locally if it doesn't exist
+      - ./fb-data:/app/fb-data:Z
+    networks:
+      - myapp-network
+    # Optional: Add a container name for easier reference
+    container_name: firebase_auth_emulator
+  react-frontend:
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./react-frontend/:/app:Z
+      - bun_modules_volume:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      # - CHOKIDAR_USEPOLLING=true # Often needed for HMR in Docker volumes
+volumes:
+  bun_modules_volume: {}
+  auth_data:
+
+
+networks:
+  myapp-network:
+    driver: bridge
