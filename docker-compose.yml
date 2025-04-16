@@ -27,6 +27,16 @@ services:
     environment:
       - NODE_ENV=development
       # - CHOKIDAR_USEPOLLING=true # Often needed for HMR in Docker volumes
+    networks:
+      - myapp-network
+  dotnet-server:
+    build:
+      context: ./dotnet-server
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8080:8080
+    networks:
+      - myapp-network
 volumes:
   bun_modules_volume: {}
   auth_data:
@@ -34,4 +44,4 @@ volumes:
 
 networks:
   myapp-network:
-    driver: bridge
+    driver: bridgez

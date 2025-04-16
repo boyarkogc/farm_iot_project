@@ -26,3 +26,7 @@ dist-ssr
 .env*
 #firebase
 firebase*
+#dotnet
+dotnet-server/bin
+dotnet-server/obj
+dotnet-server/out
