@@ -1,4 +1,67 @@
 services:
+  influxdb:
+    image: influxdb:2.7 # Use a specific version for stability
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086" # Map host port 8086 to container port 8086 for UI access
+    volumes:
+      - influxdb_data:/var/lib/influxdb2 # Persist InfluxDB data
+      - influxdb_config:/etc/influxdb2 # Persist InfluxDB config
+    environment:
+      # --- Initial InfluxDB Setup ---
+      # These are used ONLY on the first run to set up the instance.
+      # Change these default values!
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=my-user
+      - DOCKER_INFLUXDB_INIT_PASSWORD=my-super-secret-password # CHANGE THIS!
+      - DOCKER_INFLUXDB_INIT_ORG=my-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=my-bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-admin-token # CHANGE THIS! Used by Telegraf.
+      # Optional: Set retention period for the initial bucket (e.g., "7d", "30d"). 0 means infinite.
+      # - DOCKER_INFLUXDB_INIT_RETENTION=30d
+    networks:
+      - myapp-network
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0 # Use a specific version for stability
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883" # Standard MQTT port
+      # - "9001:9001" # Optional: MQTT over WebSockets
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:z # Mount custom config (read-only)
+      - mosquitto_data:/mosquitto/data # Persist MQTT data (retained messages, etc.)
+      - mosquitto_log:/mosquitto/log # Persist MQTT logs
+    networks:
+      - myapp-network
+
+  telegraf:
+    image: telegraf:1.29 # Use a specific version for stability
+    container_name: telegraf
+    restart: unless-stopped
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro,z # Mount custom config (read-only)
+      # Optional: Mount Docker socket if you want Telegraf to collect Docker stats
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - influxdb
+      - mosquitto
+    environment:
+      # Pass the InfluxDB token to Telegraf. Must match DOCKER_INFLUXDB_INIT_ADMIN_TOKEN.
+      - INFLUX_TOKEN=my-super-secret-admin-token # CHANGE THIS to match InfluxDB token
+      # Optional: Add environment variables accessible within telegraf.conf via ${MY_VAR}
+      # - HOST_HOSTNAME=${HOSTNAME}
+    networks:
+      - myapp-network
+  data-simulator:
+    build:
+      context: ./data-simulator # Path to directory with Dockerfile and Python script
+    depends_on:
+      - mosquitto
+    networks:
+      - myapp-network
   firebase-auth-emulator:
     build:
       context: ./react-frontend
@@ -40,8 +103,12 @@ services:
 volumes:
   bun_modules_volume: {}
   auth_data:
-
+  influxdb_data: # Docker-managed volume for InfluxDB data
+  influxdb_config: # Docker-managed volume for InfluxDB configuration
+  mosquitto_data: # Docker-managed volume for Mosquitto data
+  mosquitto_log:
+    # Docker-managed volume for Mosquitto logs
 
 networks:
   myapp-network:
-    driver: bridgez
+    driver: bridge
