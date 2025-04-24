@@ -33,10 +33,24 @@ logging.debug("hello world")
 try:
     while True:
         soil_moisture = round(random.uniform(20.0, 80.0), 2)
-        temp = round(random.uniform(15.0, 25.0), 2)
         payload = json.dumps({
             "device_id": DEVICE_ID,
+            "location": "backyard",
             "soil_moisture": soil_moisture,
+            "timestamp": time.time() # Or use ISO format string
+        })
+        result = client.publish(MQTT_TOPIC, payload)
+        # result: [0, 1]
+        status = result[0]
+        if status == 0:
+            print(f"Send `{payload}` to topic `{MQTT_TOPIC}`")
+        else:
+            print(f"Failed to send message to topic {MQTT_TOPIC}")
+
+        temp = round(random.uniform(40.0, 100.0), 2)
+        payload = json.dumps({
+            "device_id": DEVICE_ID,
+            "location": "backyard",
             "temperature": temp,
             "timestamp": time.time() # Or use ISO format string
         })
