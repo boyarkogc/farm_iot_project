@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 # Env variables
 .env*
+**/config/**
 #firebase
 firebase*
 #dotnet
