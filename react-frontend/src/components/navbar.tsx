@@ -16,11 +16,12 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="flex justify-between">
-      <ModeToggle />
+    <nav className="flex justify-end">
       <ul className="flex items-center gap-2">
-        {<li>{user && `Logout link goes here...`}</li>}
-        <li>Nav link 1 goes here</li>
+        {/*<li>{user && `Logout link goes here...`}</li>*/}
+        <li>
+          <ModeToggle />
+        </li>
         <li>
           <Link to="/">Home</Link>
         </li>
