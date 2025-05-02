@@ -1,5 +1,5 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-//import GetWeather from "./get-weather";
+import { DashboardContextProvider } from "./contexts/dashboard-context";
 import DashboardSidebar from "./dashboard-sidebar";
 import DashboardHeader from "./dashboard-header";
 import CurrentReadings from "./current-readings";
@@ -8,17 +8,19 @@ import ControlPanel from "./control-panel";
 
 export default function Dashboard() {
   return (
-    <SidebarProvider>
-      <DashboardSidebar />
-      <main className="flex-grow">
-        <SidebarTrigger />
-        <div className="ml-6">
-          <DashboardHeader />
-          <CurrentReadings />
-          <DashboardChart />
-          <ControlPanel />
-        </div>
-      </main>
-    </SidebarProvider>
+    <DashboardContextProvider>
+      <SidebarProvider>
+        <DashboardSidebar />
+        <main className="flex-grow">
+          <SidebarTrigger />
+          <div className="ml-6">
+            <DashboardHeader />
+            <CurrentReadings />
+            <DashboardChart />
+            <ControlPanel />
+          </div>
+        </main>
+      </SidebarProvider>
+    </DashboardContextProvider>
   );
 }

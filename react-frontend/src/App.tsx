@@ -1,5 +1,5 @@
 import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "./components/auth-provider";
+import { AuthProvider } from "./components/contexts/auth-provider";
 import { LoginForm } from "./components/login-form";
 import NavBar from "@/components/navbar";
 import Footer from "@/components/footer";
