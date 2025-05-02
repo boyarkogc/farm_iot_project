@@ -1,6 +1,6 @@
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth } from "@/components/contexts/auth-provider";
 import { Link } from "react-router-dom";
 
 export default function NavBar() {

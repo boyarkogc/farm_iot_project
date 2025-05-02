@@ -15,6 +15,7 @@ logging.basicConfig(
 MQTT_BROKER = "mosquitto"
 MQTT_PORT = 1883
 DEVICE_ID = "pi_dev_01"
+DEVICE_ID_2 = "pi_dev_02"
 MQTT_TOPIC = f"sensors/{DEVICE_ID}/data"
 
 logging.debug("test1")
@@ -33,10 +34,12 @@ logging.debug("hello world")
 try:
     while True:
         soil_moisture = round(random.uniform(20.0, 80.0), 2)
+        temp = round(random.uniform(40.0, 100.0), 2)
         payload = json.dumps({
             "device_id": DEVICE_ID,
             "location": "backyard",
             "soil_moisture": soil_moisture,
+            "temperature": temp,
             "timestamp": time.time() # Or use ISO format string
         })
         result = client.publish(MQTT_TOPIC, payload)
@@ -49,7 +52,7 @@ try:
 
         temp = round(random.uniform(40.0, 100.0), 2)
         payload = json.dumps({
-            "device_id": DEVICE_ID,
+            "device_id": DEVICE_ID_2,
             "location": "backyard",
             "temperature": temp,
             "timestamp": time.time() # Or use ISO format string

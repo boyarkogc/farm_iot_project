@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using System.Text;
 using Google.Api.Gax.ResourceNames;
 
-namespace DotnetServer.Configuration
+namespace SecretManagement
 {
   public static class GoogleSecretManagerExtensions
   {
