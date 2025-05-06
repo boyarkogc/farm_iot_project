@@ -62,7 +62,7 @@ services:
       - mosquitto
     networks:
       - myapp-network
-# Firebase emulator removed - using real Firebase project for development now
+  # Firebase emulator removed - using real Firebase project for development now
   react-frontend:
     build:
       context: ./react-frontend
@@ -95,7 +95,6 @@ services:
 volumes:
   node_modules_volume: {}
   auth_data:
-  firebase_data: # Docker-managed volume for Firebase Emulator data
   influxdb_data: # Docker-managed volume for InfluxDB data
   influxdb_config: # Docker-managed volume for InfluxDB configuration
   mosquitto_data: # Docker-managed volume for Mosquitto data
