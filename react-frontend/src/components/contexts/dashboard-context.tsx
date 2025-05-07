@@ -108,10 +108,17 @@ export const DashboardContextProvider: React.FC<
     error,
   };
 
+  // Load initial data
   useEffect(() => {
-    updateActiveFields("pi_dev_01");
-    getDeviceData("pi_dev_01");
+    updateActiveFields(activeDevice);
+    getDeviceData(activeDevice);
   }, []);
+  
+  // Reload data when active device changes
+  useEffect(() => {
+    updateActiveFields(activeDevice);
+    getDeviceData(activeDevice);
+  }, [activeDevice]);
 
   return (
     <DashboardContext.Provider value={value}>

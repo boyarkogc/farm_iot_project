@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import ProtectedRoute from "./components/protected-route";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import RegisterDevice from "./components/register-device";
 
 const Dashboard = lazy(() => import("@/components/dashboard"));
 function App() {
@@ -28,6 +29,17 @@ function App() {
                   </Suspense>
                 }
               />
+              <Route
+                path=":deviceId"
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Dashboard />
+                  </Suspense>
+                }
+              />
+            </Route>
+            <Route path="/register" element={<ProtectedRoute />}>
+              <Route index element={<RegisterDevice />} />
             </Route>
           </Routes>
           <Footer />

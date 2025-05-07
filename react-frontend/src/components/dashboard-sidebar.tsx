@@ -1,4 +1,6 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
+import { Cpu, Plus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useDashboardContext } from "./contexts/dashboard-context";
 
 import {
   Sidebar,
@@ -12,49 +14,64 @@ import {
 } from "@/components/ui/sidebar";
 
 export default function DashboardSidebar() {
-  // Menu items.
-  const items = [
+  const { setActiveDevice, activeDevice } = useDashboardContext();
+
+  // Device items
+  const deviceItems = [
     {
-      title: "Home",
-      url: "#",
-      icon: Home,
+      id: "pi_dev_01",
+      title: "pi_dev_01",
+      icon: Cpu,
     },
     {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: Search,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
+      id: "pi_dev_02",
+      title: "pi_dev_02",
+      icon: Cpu,
     },
   ];
+
+  // Special items (like Add device)
+  const specialItems = [
+    {
+      title: "Add device",
+      url: "/register",
+      icon: Plus,
+    },
+  ];
+
+  const handleDeviceClick = (deviceId: string) => {
+    setActiveDevice(deviceId);
+  };
 
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel>Devices</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a href={item.url}>
+              {deviceItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={activeDevice === item.id}
+                    onClick={() => handleDeviceClick(item.id)}
+                  >
+                    <button>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+
+              {specialItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
