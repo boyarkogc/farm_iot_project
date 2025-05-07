@@ -9,6 +9,7 @@ import React, {
 import SensorReading, {
   CondensedSensorReading,
 } from "@/interfaces/sensor_reading_interface";
+import { useDevices } from "./device-context";
 
 // Define the shape of your context state
 interface DashboardContextState {
@@ -40,7 +41,13 @@ interface DashboardContextProviderProps {
 export const DashboardContextProvider: React.FC<
   DashboardContextProviderProps
 > = ({ children }) => {
-  const [activeDevice, setActiveDevice] = useState("pi_dev_01");
+  // Get user devices from the device context
+  const { devices } = useDevices();
+  
+  // Default to first device from the user's devices if available, otherwise use fallback
+  const defaultDeviceId = devices.length > 0 ? devices[0].id : "pi_dev_01";
+  
+  const [activeDevice, setActiveDevice] = useState(defaultDeviceId);
   const [activeFields, setActiveFields] = useState(["temperature"]);
   const [activeChart, setActiveChart] = useState("temperature");
   const [data, setData] = useState<SensorReading[]>([]);
@@ -49,6 +56,13 @@ export const DashboardContextProvider: React.FC<
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Update active device when user's devices change (only if not explicitly set by user)
+  useEffect(() => {
+    if (devices.length > 0 && (activeDevice === "pi_dev_01" || !devices.some(d => d.id === activeDevice))) {
+      setActiveDevice(devices[0].id);
+    }
+  }, [devices]);
 
   const updateActiveFields = (deviceID: string) => {
     //const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8080"; // Fallback just in case
