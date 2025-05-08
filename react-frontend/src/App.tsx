@@ -28,6 +28,14 @@ function App() {
                   </Suspense>
                 }
               />
+              <Route
+                path=":deviceId"
+                element={
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Dashboard />
+                  </Suspense>
+                }
+              />
             </Route>
           </Routes>
           <Footer />

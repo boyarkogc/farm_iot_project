@@ -62,22 +62,7 @@ services:
       - mosquitto
     networks:
       - myapp-network
-  firebase-auth-emulator:
-    build:
-      context: ./react-frontend
-      dockerfile: Dockerfile.firebase
-    ports:
-      # Map host ports to container ports
-      - "9099:9099" # Auth Emulator
-      - "4000:4000" # Emulator UI
-    volumes:
-      # Mount a local directory into the container for persistence
-      # Creates 'fb-data' locally if it doesn't exist
-      - ./fb-data:/app/fb-data:Z
-    networks:
-      - myapp-network
-    # Optional: Add a container name for easier reference
-    container_name: firebase_auth_emulator
+  # Firebase emulator removed - using real Firebase project for development now
   react-frontend:
     build:
       context: ./react-frontend
@@ -86,7 +71,9 @@ services:
       - "5173:5173"
     volumes:
       - ./react-frontend/:/app:Z
-      - bun_modules_volume:/app/node_modules
+      - node_modules_volume:/app/node_modules
+    env_file:
+      - ./react-frontend/.env.development
     environment:
       - NODE_ENV=development
       # - CHOKIDAR_USEPOLLING=true # Often needed for HMR in Docker volumes
@@ -106,7 +93,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/farm-iot-project-73d668215ab6.json
       - INFLUXDB_HOST=influxdb
 volumes:
-  bun_modules_volume: {}
+  node_modules_volume: {}
   auth_data:
   influxdb_data: # Docker-managed volume for InfluxDB data
   influxdb_config: # Docker-managed volume for InfluxDB configuration

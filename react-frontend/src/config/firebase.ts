@@ -1,6 +1,11 @@
 // src/config/firebase.ts
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { getAuth, connectAuthEmulator, Auth } from "firebase/auth";
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  Firestore,
+} from "firebase/firestore";
 
 // Define a type for the config structure for clarity (optional but good practice)
 interface FirebaseConfig {
@@ -41,31 +46,57 @@ const app: FirebaseApp = initializeApp(firebaseConfig);
 // Explicitly type auth with the Auth type from firebase/auth
 const auth: Auth = getAuth(app);
 
-// --- Emulator Connection ---
-// Check if we should use emulators based on the environment variable
-// In Vite, environment variables are accessed via import.meta.env
+// Initialize Firestore
+const db: Firestore = getFirestore(app);
+
+// --- Environment Logging ---
+// Check which Firebase configuration we're using
+if (import.meta.env.DEV) {
+  console.log("Development mode: Using development Firebase project");
+  console.log(`Project ID: ${import.meta.env.VITE_FIREBASE_PROJECT_ID}`);
+} else {
+  console.log("Production mode: Using production Firebase services");
+}
+
+// --- Emulator Connection (if needed) ---
+// This section is kept for reference, but we're now using a real Firebase project
+// instead of emulators for better data persistence
 const useEmulators = import.meta.env.VITE_USE_FIREBASE_EMULATORS === "true";
 
 if (useEmulators) {
-  console.log("Development mode: Connecting to Firebase Auth Emulator");
-  // Point to the auth emulator running on localhost.
-  // Default port is 9099.
+  console.log("Connecting to Firebase Emulators");
+
+  // Connect to Auth Emulator
   try {
-    // Using 127.0.0.1 instead of localhost can sometimes avoid specific network resolution issues
-    connectAuthEmulator(auth, "http://127.0.0.1:9099", {
+    // Use firebase-emulator service name when running in Docker
+    const authHost =
+      window.location.hostname === "localhost"
+        ? "localhost"
+        : "firebase-emulator";
+    connectAuthEmulator(auth, `http://${authHost}:9099`, {
       disableWarnings: true,
     });
     console.log("Successfully connected to Auth Emulator.");
   } catch (error) {
     console.error("Error connecting to Auth Emulator:", error);
   }
-} else {
-  console.log("Production mode: Connecting to live Firebase Auth.");
+
+  // Connect to Firestore Emulator
+  try {
+    const firestoreHost =
+      window.location.hostname === "localhost"
+        ? "localhost"
+        : "firebase-emulator";
+    connectFirestoreEmulator(db, firestoreHost, 9090);
+    console.log("Successfully connected to Firestore Emulator.");
+  } catch (error) {
+    console.error("Error connecting to Firestore Emulator:", error);
+  }
 }
 // --- End Emulator Connection ---
 
-// Export auth instance to use in your components
-export { auth };
+// Export instances to use in your components
+export { auth, db };
 
 // You can also export 'app' if needed
 // export { app }; // if you need the FirebaseApp instance elsewhere
