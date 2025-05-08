@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { useAuth } from "./auth-provider";
 
@@ -16,6 +16,7 @@ type DeviceContextType = {
   isLoading: boolean;
   error: string | null;
   refreshDevices: () => Promise<void>;
+  updateDeviceName: (deviceId: string, newName: string) => Promise<void>;
 };
 
 const initialValue: DeviceContextType = {
@@ -23,6 +24,7 @@ const initialValue: DeviceContextType = {
   isLoading: false,
   error: null,
   refreshDevices: async () => {},
+  updateDeviceName: async () => {},
 };
 
 const DeviceContext = createContext<DeviceContextType>(initialValue);
@@ -74,12 +76,38 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     fetchUserDevices();
   }, [user]);
 
+  // Function to update device name in Firestore
+  const updateDeviceName = async (deviceId: string, newName: string) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const deviceRef = doc(db, `users/${user.uid}/devices`, deviceId);
+      await updateDoc(deviceRef, { name: newName });
+      
+      // Update local state to reflect the change
+      setDevices(prevDevices => 
+        prevDevices.map(device => 
+          device.id === deviceId ? { ...device, name: newName } : device
+        )
+      );
+    } catch (err) {
+      console.error("Error updating device name:", err);
+      setError("Failed to update device name. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Value to provide
   const value = {
     devices,
     isLoading,
     error,
     refreshDevices: fetchUserDevices,
+    updateDeviceName,
   };
 
   return (
