@@ -1,7 +1,7 @@
 import { Cpu, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useDashboardContext } from "./contexts/dashboard-context";
 import { useDevices } from "./contexts/device-context";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -13,10 +13,23 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function DashboardSidebar() {
   const { setActiveDevice, activeDevice } = useDashboardContext();
   const { devices, isLoading, error } = useDevices();
+  const [registrationCode, setRegistrationCode] = useState("");
 
   // Map Firebase devices to sidebar items
   const deviceItems = devices.map((device) => ({
@@ -25,14 +38,12 @@ export default function DashboardSidebar() {
     icon: Cpu,
   }));
 
-  // Special items (like Add device)
-  const specialItems = [
-    {
-      title: "Add device",
-      url: "/register",
-      icon: Plus,
-    },
-  ];
+  // Handle device registration
+  const handleRegisterDevice = () => {
+    console.log("Registering device with code:", registrationCode);
+    // For now, just log the code. Actual registration logic would go here
+    setRegistrationCode("");
+  };
 
   const handleDeviceClick = (deviceId: string) => {
     const device = devices.find((d) => d.id === deviceId);
@@ -72,16 +83,40 @@ export default function DashboardSidebar() {
                   <div className="px-3 py-2 text-sm">No devices found</div>
                 )}
 
-                {specialItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <SidebarMenuButton asChild>
+                        <button>
+                          <Plus />
+                          <span>Add device</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Register New Device</DialogTitle>
+                        <DialogDescription>
+                          Enter the device registration code to add a new device to your dashboard.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="registrationCode">Registration Code</Label>
+                          <Input 
+                            id="registrationCode" 
+                            placeholder="Enter code" 
+                            value={registrationCode} 
+                            onChange={(e) => setRegistrationCode(e.target.value)} 
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={handleRegisterDevice} type="submit">Register Device</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </SidebarMenuItem>
               </SidebarMenu>
             )}
           </SidebarGroupContent>

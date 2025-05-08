@@ -8,7 +8,7 @@ import { useState } from "react";
 export default function DashboardHeader() {
   const { activeDevice, getDeviceData } = useDashboardContext();
   const { updateDeviceName } = useDevices();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(activeDevice.name || "");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -26,7 +26,7 @@ export default function DashboardHeader() {
 
   const handleNameSave = async () => {
     if (editingName.trim() === "") return;
-    
+
     setIsUpdating(true);
     try {
       await updateDeviceName(activeDevice.id, editingName.trim());
@@ -50,17 +50,17 @@ export default function DashboardHeader() {
             disabled={isUpdating}
             autoFocus
           />
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleNameSave}
             disabled={isUpdating || editingName.trim() === ""}
           >
             <Check className="h-5 w-5 text-green-500" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleEditToggle}
             disabled={isUpdating}
           >
@@ -69,9 +69,7 @@ export default function DashboardHeader() {
         </div>
       ) : (
         <div className="flex items-center gap-2 group">
-          <h1 className="text-2xl">
-            {activeDevice.name || "<No name>"}
-          </h1>
+          <h1 className="text-2xl">{activeDevice.name || "<No name>"}</h1>
           <Button
             variant="ghost"
             size="icon"
