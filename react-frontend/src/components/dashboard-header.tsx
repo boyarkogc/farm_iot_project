@@ -7,11 +7,13 @@ export default function DashboardHeader() {
 
   return (
     <div className="flex justify-between">
-      <h1 className="text-2xl">{activeDevice}</h1>
+      <h1 className="text-2xl">
+        {activeDevice.name} ({activeDevice.id})
+      </h1>
       <Button
         variant="outline"
         className="m-2"
-        onClick={() => getDeviceData(activeDevice)}
+        onClick={() => getDeviceData(activeDevice.id)}
       >
         Refresh <RefreshCw />
       </Button>

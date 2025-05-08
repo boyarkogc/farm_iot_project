@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import { useAuth } from "./auth-provider";
 
@@ -50,16 +50,16 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     try {
       const devicesRef = collection(db, `users/${user.uid}/devices`);
       const querySnapshot = await getDocs(devicesRef);
-      
+
       const fetchedDevices: Device[] = [];
       querySnapshot.forEach((doc) => {
-        const deviceData = doc.data() as Omit<Device, 'id'>;
+        const deviceData = doc.data() as Omit<Device, "id">;
         fetchedDevices.push({
           id: doc.id,
-          ...deviceData
+          ...deviceData,
         });
       });
-      
+
       setDevices(fetchedDevices);
     } catch (err) {
       console.error("Error fetching devices:", err);
@@ -79,12 +79,10 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
     devices,
     isLoading,
     error,
-    refreshDevices: fetchUserDevices
+    refreshDevices: fetchUserDevices,
   };
 
   return (
-    <DeviceContext.Provider value={value}>
-      {children}
-    </DeviceContext.Provider>
+    <DeviceContext.Provider value={value}>{children}</DeviceContext.Provider>
   );
 }

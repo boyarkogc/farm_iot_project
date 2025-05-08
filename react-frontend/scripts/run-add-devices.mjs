@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Run the add-demo-devices.js script with env variables from Vite
 console.log('Running add-demo-devices.js with Vite environment...');
 
-const scriptPath = resolve(__dirname, 'add-demo-devices.js');
+const scriptPath = resolve(__dirname, './add-demo-devices.js');
 const vite = spawn('npx', ['vite-node', scriptPath], {
   stdio: 'inherit',
   shell: true

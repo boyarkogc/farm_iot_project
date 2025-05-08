@@ -9,11 +9,11 @@ import React, {
 import SensorReading, {
   CondensedSensorReading,
 } from "@/interfaces/sensor_reading_interface";
-import { useDevices } from "./device-context";
+import { useDevices, Device } from "./device-context";
 
 // Define the shape of your context state
 interface DashboardContextState {
-  activeDevice: string;
+  activeDevice: Device;
   activeFields: string[];
   activeChart: string;
   data: SensorReading[];
@@ -21,8 +21,8 @@ interface DashboardContextState {
   loading: boolean;
   error: string | null;
   setActiveChart: (chart: string) => void;
-  setActiveDevice: (device: string) => void;
-  getDeviceData: (device: string) => void;
+  setActiveDevice: (device: Device) => void;
+  getDeviceData: (deviceId: string) => void;
 }
 
 // Create the context with a default value
@@ -43,11 +43,19 @@ export const DashboardContextProvider: React.FC<
 > = ({ children }) => {
   // Get user devices from the device context
   const { devices } = useDevices();
-  
+
+  // Default device fallback when no devices are available
+  const defaultDevice: Device = {
+    id: "ABCD1234",
+    name: "Default Device",
+    type: "unknown",
+    location: "unknown",
+  };
+
   // Default to first device from the user's devices if available, otherwise use fallback
-  const defaultDeviceId = devices.length > 0 ? devices[0].id : "pi_dev_01";
-  
-  const [activeDevice, setActiveDevice] = useState(defaultDeviceId);
+  const initialDevice = devices.length > 0 ? devices[0] : defaultDevice;
+
+  const [activeDevice, setActiveDevice] = useState<Device>(initialDevice);
   const [activeFields, setActiveFields] = useState(["temperature"]);
   const [activeChart, setActiveChart] = useState("temperature");
   const [data, setData] = useState<SensorReading[]>([]);
@@ -59,8 +67,12 @@ export const DashboardContextProvider: React.FC<
 
   // Update active device when user's devices change (only if not explicitly set by user)
   useEffect(() => {
-    if (devices.length > 0 && (activeDevice === "pi_dev_01" || !devices.some(d => d.id === activeDevice))) {
-      setActiveDevice(devices[0].id);
+    if (
+      devices.length > 0 &&
+      (activeDevice.id === "ABCD1234" ||
+        !devices.some((d) => d.id === activeDevice.id))
+    ) {
+      setActiveDevice(devices[0]);
     }
   }, [devices]);
 
@@ -124,14 +136,14 @@ export const DashboardContextProvider: React.FC<
 
   // Load initial data
   useEffect(() => {
-    updateActiveFields(activeDevice);
-    getDeviceData(activeDevice);
+    updateActiveFields(activeDevice.id);
+    getDeviceData(activeDevice.id);
   }, []);
-  
+
   // Reload data when active device changes
   useEffect(() => {
-    updateActiveFields(activeDevice);
-    getDeviceData(activeDevice);
+    updateActiveFields(activeDevice.id);
+    getDeviceData(activeDevice.id);
   }, [activeDevice]);
 
   return (

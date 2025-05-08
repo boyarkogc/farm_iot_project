@@ -1,16 +1,16 @@
 // Script to add demo devices to Firestore
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
-import { createRequire } from 'module';
+import { createRequire } from "module";
 
 // Setup require for dotenv
 const require = createRequire(import.meta.url);
 
 // Load dotenv if available
 try {
-  require('dotenv').config();
+  require("dotenv").config();
 } catch (e) {
-  console.log('dotenv not available, using environment variables directly');
+  console.log("dotenv not available, using environment variables directly");
 }
 
 // Replace with your actual Firebase config
@@ -38,13 +38,13 @@ const userIds = [
 // Sample device data
 const sampleDevices = [
   {
-    id: "pi_dev_01",
+    id: "ABCD1234",
     name: "pi_dev_01",
     type: "raspberry_pi",
     location: "Corn Field",
   },
   {
-    id: "pi_dev_02",
+    id: "EDFG5678",
     name: "pi_dev_02",
     type: "raspberry_pi",
     location: "Strawberry Patch",
@@ -64,11 +64,11 @@ async function addDevicesToUsers() {
         const { id, ...deviceData } = device;
 
         await setDoc(deviceRef, deviceData);
-        
+
         console.log(`Added device ${device.id} to user ${userId}`);
       }
     }
-    
+
     console.log("All sample devices added successfully!");
   } catch (error) {
     console.error("Error adding sample devices:", error);

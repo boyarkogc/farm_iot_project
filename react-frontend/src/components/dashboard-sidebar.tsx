@@ -35,7 +35,10 @@ export default function DashboardSidebar() {
   ];
 
   const handleDeviceClick = (deviceId: string) => {
-    setActiveDevice(deviceId);
+    const device = devices.find((d) => d.id === deviceId);
+    if (device) {
+      setActiveDevice(device);
+    }
   };
 
   return (
@@ -55,7 +58,7 @@ export default function DashboardSidebar() {
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
                         asChild
-                        isActive={activeDevice === item.id}
+                        isActive={activeDevice.id === item.id}
                         onClick={() => handleDeviceClick(item.id)}
                       >
                         <button>
