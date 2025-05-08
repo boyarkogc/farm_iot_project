@@ -1,0 +1,25 @@
+### Get all devices for a user
+GET http://localhost:8080/api/devices
+Content-Type: application/json
+X-User-ID: test-user-1
+
+### Get only registered devices for a user
+GET http://localhost:8080/api/devices?isRegistered=true
+Content-Type: application/json
+X-User-ID: test-user-1
+
+### Get registration code for a device
+GET http://localhost:8080/api/devices/sensor-124/registration-code
+Content-Type: application/json
+
+### Register a device to a user
+POST http://localhost:8080/api/register-device
+Content-Type: application/json
+X-User-ID: test-user-1
+
+{
+  "registrationCode": "199999", 
+  "deviceId": "sensor-124",
+  "deviceName": "Living Room Sensor",
+  "location": "Living Room"
+}

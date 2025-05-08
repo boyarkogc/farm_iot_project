@@ -88,10 +88,11 @@ services:
     networks:
       - myapp-network
     volumes:
-      - ./dotnet-server/config/farm-iot-project-73d668215ab6.json:/app/farm-iot-project-73d668215ab6.json:z
+      - ./dotnet-server/config:/app/config:z
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/farm-iot-project-73d668215ab6.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/config/farm-iot-project-73d668215ab6.json
       - INFLUXDB_HOST=influxdb
+      - ASPNETCORE_ENVIRONMENT=Development
 volumes:
   node_modules_volume: {}
   auth_data:

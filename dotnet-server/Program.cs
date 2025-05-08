@@ -3,9 +3,13 @@ using Microsoft.Extensions.Configuration;
 using InfluxDB.Client;
 using InfluxDB.Client.Api.Domain;
 using InfluxDB.Client.Core.Flux.Domain;
+using FirebaseAdmin;
+using Google.Cloud.Firestore;
+using Google.Apis.Auth.OAuth2;
 //My custom namespaces
 using SecretManagement;
 using InfluxDBModels;
+using dotnet_server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,39 @@ builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 builder.Configuration.AddGoogleCloudSecretManager("farm-iot-project");
+
+// Initialize Firebase Admin SDK
+// Always use the production project since we have valid credentials for it
+string firebaseProjectId = "farm-iot-project";
+    
+Console.WriteLine($"Using Firebase project ID: {firebaseProjectId}");
+    
+// Get service account credentials file path
+// Use the existing service account file
+var serviceAccountFileName = "farm-iot-project-73d668215ab6.json";
+    
+var serviceAccountPath = Path.Combine(Directory.GetCurrentDirectory(), "config", serviceAccountFileName);
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"Service account path: {serviceAccountPath}");
+Console.WriteLine($"Directory exists: {Directory.Exists(Path.GetDirectoryName(serviceAccountPath))}");
+Console.WriteLine($"File exists: {System.IO.File.Exists(serviceAccountPath)}");
+
+// Initialize Firebase Admin SDK if not already initialized
+if (FirebaseApp.DefaultInstance == null)
+{
+    var credential = GoogleCredential.FromFile(serviceAccountPath);
+    FirebaseApp.Create(new AppOptions
+    {
+        Credential = credential,
+        ProjectId = firebaseProjectId
+    });
+}
+
+// Register Firestore client for dependency injection
+builder.Services.AddSingleton<FirestoreDb>(sp => 
+{
+    return FirestoreDb.Create(firebaseProjectId);
+});
 
 builder.Services.AddSingleton<InfluxDBClient>(sp =>
 {
@@ -53,9 +90,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:5173") // The origin of your React app in the browser
+                          policy.WithOrigins(
+                                  "http://localhost:5173",  // Vite dev server
+                                  "http://localhost:3000",  // React default
+                                  "http://localhost:8080"   // In case of same-origin
+                              )
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .AllowCredentials(); // Allow credentials like cookies
                           // IMPORTANT: For production, be more specific with origins, headers, and methods.
                           // You might get the allowed origins from configuration:
                           // policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>())
@@ -213,6 +255,327 @@ app.MapGet("devices/{deviceId}/fields", async (IServiceProvider sp,
     }
 
     return fieldKeys;
+});
+
+// Endpoints for device management
+app.MapGet("/api/devices", async (
+    HttpContext httpContext,
+    FirestoreDb firestoreDb,
+    ILogger<Program> logger) =>
+{
+    try
+    {
+        // In a production environment, you'd extract the user ID from the Firebase Auth token
+        // For development/testing, we'll get it from a custom header
+        string userId = httpContext.Request.Headers["X-User-ID"].ToString();
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            logger.LogWarning("Device list requested without user ID");
+            return Results.BadRequest("User ID is required");
+        }
+        
+        // Log Firestore configuration for debugging
+        logger.LogInformation($"Using Firestore project: {firebaseProjectId}");
+        
+        // First, let's check if the user exists in the users collection
+        logger.LogInformation($"Checking users collection for ID: {userId}");
+        
+        // Try a direct document fetch first
+        var directDoc = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+        if (directDoc.Exists)
+        {
+            logger.LogInformation($"Found user directly by ID: {userId}");
+        }
+        else
+        {
+            logger.LogWarning($"Direct document fetch failed for user ID: {userId}");
+        }
+        
+        // Log all user IDs in the collection for debugging
+        logger.LogInformation("Listing all users in the collection:");
+        var allUsers = await firestoreDb.Collection("users").GetSnapshotAsync();
+        foreach (var user in allUsers.Documents)
+        {
+            logger.LogInformation($"Found user ID: {user.Id}");
+        }
+        
+        // Try a query with field matching instead of ID
+        logger.LogInformation("Trying alternative query approaches:");
+        try
+        {
+            var altQuery = await firestoreDb.Collection("users").WhereEqualTo("uid", userId).GetSnapshotAsync();
+            logger.LogInformation($"Query by uid field returned {altQuery.Count} results");
+            foreach (var doc in altQuery.Documents)
+            {
+                logger.LogInformation($"Found user with matching uid: {doc.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning($"Alternative query failed: {ex.Message}");
+        }
+        
+        var userDoc = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+        
+        if (userDoc.Exists)
+        {
+            logger.LogInformation($"User found: {userId}");
+            // Log user data for debugging
+            var userData = userDoc.ToDictionary();
+            foreach (var entry in userData)
+            {
+                logger.LogInformation($"User data: {entry.Key} = {entry.Value}");
+            }
+        }
+        else
+        {
+            logger.LogWarning($"User not found: {userId}");
+        }
+        
+        // Query Firestore for devices belonging to this user using the subcollection approach
+        logger.LogInformation($"Querying devices subcollection for user: {userId}");
+        var userDevicesCollection = firestoreDb.Collection("users").Document(userId).Collection("devices");
+        var query = userDevicesCollection.Limit(100); // Create a Query from the CollectionReference with a reasonable limit
+        
+        if (httpContext.Request.Query.ContainsKey("isRegistered"))
+        {
+            if (bool.TryParse(httpContext.Request.Query["isRegistered"], out bool isRegistered))
+            {
+                query = query.WhereEqualTo("isRegistered", isRegistered);
+            }
+        }
+        
+        var snapshot = await query.GetSnapshotAsync();
+        
+        // Log snapshot results
+        logger.LogInformation($"Firestore query returned {snapshot.Count} documents");
+        
+        // Convert the Firestore documents to our Device model
+        var devices = new List<Device>();
+        foreach (var doc in snapshot.Documents)
+        {
+            var device = doc.ConvertTo<Device>();
+            // Ensure the ID is set (it's the document ID in Firestore)
+            if (string.IsNullOrEmpty(device.Id))
+            {
+                device.Id = doc.Id;
+            }
+            devices.Add(device);
+        }
+        
+        logger.LogInformation($"Retrieved {devices.Count} devices for user {userId}");
+        
+        return Results.Ok(devices);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error retrieving user devices");
+        return Results.Problem($"Error retrieving devices: {ex.Message}");
+    }
+});
+
+// Device registration endpoints
+app.MapGet("/api/devices/{deviceId}/registration-code", (
+    string deviceId,
+    ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation($"Generating registration code for device: {deviceId}");
+        
+        // Create a registration code based on device ID and current timestamp
+        // This is a simple implementation - in production, you'd use a more robust method
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        
+        // Create a registration code - this combines the device ID with timestamp
+        // In a production implementation, you would:
+        // 1. Store this in a database with an expiration
+        // 2. Use a more secure method for generating unique codes
+        // 3. Consider rate limiting and expiration
+        var rawCode = $"{deviceId}-{timestamp}";
+        
+        // Create a 6-digit code based on the hash of the raw code
+        // This makes it easier for users to enter
+        var hashCode = Math.Abs(rawCode.GetHashCode()) % 1000000;
+        var regCode = hashCode.ToString("D6");
+        
+        logger.LogInformation($"Generated registration code: {regCode} for device: {deviceId}");
+        
+        // Create a formatted registration code that includes the deviceId
+        // This makes it easier for frontend to parse
+        var formattedRegCode = $"{deviceId}:{regCode}";
+        
+        // In production, you'd store this mapping in a database with TTL
+        // For simplicity, we're returning the registration code directly
+        return Results.Ok(new { 
+            registrationCode = formattedRegCode, // Include the device ID in the code
+            deviceId = deviceId,
+            expiresIn = "15 minutes" // This would be enforced server-side in production
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, $"Error generating registration code for device: {deviceId}");
+        return Results.Problem($"Error generating registration code: {ex.Message}");
+    }
+});
+
+// Registration code validation and device assignment endpoint
+app.MapPost("/api/register-device", async (
+    HttpContext httpContext,
+    ILogger<Program> logger,
+    FirestoreDb firestoreDb,
+    RegisterDeviceRequest request) =>
+{
+    try
+    {
+        logger.LogInformation($"Processing device registration request for code: {request.RegistrationCode}");
+        logger.LogInformation($"Request device ID: {request.DeviceId}");
+        logger.LogInformation($"Request device name: {request.DeviceName}");
+        logger.LogInformation($"Request location: {request.Location}");
+        
+        // In a production environment, you'd extract the user ID from the Firebase Auth token
+        // For development/testing, we'll get it from a custom header
+        string userId = httpContext.Request.Headers["X-User-ID"].ToString();
+        logger.LogInformation($"X-User-ID header value: {userId}");
+        
+        if (string.IsNullOrEmpty(userId))
+        {
+            logger.LogWarning("Device registration attempted without user ID");
+            return Results.BadRequest("User ID is required");
+        }
+        
+        // Log all users in the database for debugging
+        logger.LogInformation("Listing all users in database:");
+        var allUsers = await firestoreDb.Collection("users").GetSnapshotAsync();
+        foreach (var user in allUsers.Documents)
+        {
+            logger.LogInformation($"User ID: {user.Id}");
+        }
+        
+        // Validate the user exists
+        var userDoc = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+        if (!userDoc.Exists)
+        {
+            logger.LogWarning($"User not found, creating test user for: {userId}");
+            
+            // For development/testing only - create a test user if it doesn't exist
+            // Always create test user for now
+            if (true) // Temporarily force this for testing
+            {
+                logger.LogInformation($"Creating test user: {userId}");
+                
+                // Create a basic user document
+                var userData = new Dictionary<string, object>
+                {
+                    { "display_name", "Test User" },
+                    { "email", "test@example.com" },
+                    { "created_at", DateTime.UtcNow },
+                    { "last_login", DateTime.UtcNow }
+                };
+                
+                await firestoreDb.Collection("users").Document(userId).SetAsync(userData);
+                logger.LogInformation($"Test user created: {userId}");
+                
+                // Refresh the user document
+                userDoc = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+            }
+            else
+            {
+                return Results.BadRequest("User not found");
+            }
+        }
+        
+        // In a production system, you would validate the registration code against a database
+        // For this implementation, we'll parse the deviceId from the registration code
+        
+        // Validate the registration code
+        // In a real implementation, you would query a database of valid registration codes
+        // For simplicity, we'll verify the code matches our generation pattern
+        
+        // In a production system, you would validate the registration code against a database
+        // and retrieve the associated deviceId. 
+        
+        // For now, we'll use the deviceId provided in the request
+        string deviceId = request.DeviceId;
+        
+        if (string.IsNullOrEmpty(deviceId))
+        {
+            logger.LogWarning("Device ID is required");
+            return Results.BadRequest("Device ID is required");
+        }
+        
+        logger.LogInformation($"Using device ID: {deviceId} with registration code: {request.RegistrationCode}");
+        
+        // Check if device already exists for this user
+        var existingDevice = await firestoreDb.Collection("users").Document(userId)
+            .Collection("devices").Document(deviceId).GetSnapshotAsync();
+            
+        if (existingDevice.Exists)
+        {
+            logger.LogInformation($"Device {deviceId} already registered to user {userId}");
+            return Results.BadRequest("Device already registered to this account");
+        }
+        
+        // Create a new device document for the user
+        var device = new Device
+        {
+            Id = deviceId,
+            Name = request.DeviceName ?? $"Device {deviceId}",
+            Type = "IoT Sensor", // Default type, could be passed in request
+            Location = request.Location ?? "Unknown",
+            UserId = userId,
+            IsRegistered = true
+        };
+        
+        // Add the device to the user's devices collection
+        try {
+            logger.LogInformation($"Attempting to write device {deviceId} to Firestore for user {userId}");
+            logger.LogInformation($"Firestore path: users/{userId}/devices/{deviceId}");
+            logger.LogInformation($"Device data: Name={device.Name}, Type={device.Type}, Location={device.Location}");
+            
+            var documentReference = firestoreDb.Collection("users").Document(userId)
+                .Collection("devices").Document(deviceId);
+                
+            await documentReference.SetAsync(device);
+            
+            // Verify the write by reading it back
+            var snapshot = await documentReference.GetSnapshotAsync();
+            if (snapshot.Exists) {
+                logger.LogInformation($"Device document successfully created and verified in Firestore");
+                var deviceData = snapshot.ConvertTo<Device>();
+                logger.LogInformation($"Verified device data: Name={deviceData.Name}, Type={deviceData.Type}, ID={deviceData.Id}");
+            } else {
+                logger.LogWarning($"Device document was not found after write operation!");
+            }
+            
+            logger.LogInformation($"Device {deviceId} successfully registered to user {userId}");
+        } catch (Exception ex) {
+            logger.LogError(ex, $"Error writing device to Firestore: {ex.Message}");
+            throw;
+        }
+        
+        return Results.Ok(new { 
+            success = true,
+            message = "Device successfully registered",
+            device = device
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error registering device");
+        
+        // Add more specific error handling
+        if (ex.Message.Contains("PermissionDenied") || ex.Message.Contains("Missing or insufficient permissions"))
+        {
+            logger.LogError("Firebase permission error. Check service account permissions.");
+            return Results.BadRequest("Authentication error: Unable to register device due to permission issues.");
+        }
+        
+        // Return a more user-friendly error message
+        return Results.BadRequest($"Error registering device: {ex.Message}");
+    }
 });
 
 app.Run();

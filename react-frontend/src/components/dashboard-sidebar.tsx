@@ -28,8 +28,12 @@ import { Label } from "@/components/ui/label";
 
 export default function DashboardSidebar() {
   const { setActiveDevice, activeDevice } = useDashboardContext();
-  const { devices, isLoading, error } = useDevices();
+  const { devices, isLoading, error, registerDevice } = useDevices();
   const [registrationCode, setRegistrationCode] = useState("");
+  const [deviceName, setDeviceName] = useState("");
+  const [location, setLocation] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   // Map Firebase devices to sidebar items
   const deviceItems = devices.map((device) => ({
@@ -39,10 +43,47 @@ export default function DashboardSidebar() {
   }));
 
   // Handle device registration
-  const handleRegisterDevice = () => {
-    console.log("Registering device with code:", registrationCode);
-    // For now, just log the code. Actual registration logic would go here
-    setRegistrationCode("");
+  const handleRegisterDevice = async () => {
+    if (!registrationCode.trim()) {
+      setRegistrationError("Registration code is required");
+      return;
+    }
+
+    setIsRegistering(true);
+    setRegistrationError(null);
+    
+    try {
+      const result = await registerDevice(
+        registrationCode,
+        deviceName || undefined,
+        location || undefined
+      );
+      
+      if (result) {
+        console.log("Device registered successfully:", result);
+        // Reset form
+        setRegistrationCode("");
+        setDeviceName("");
+        setLocation("");
+      } else {
+        console.error("Result was null or undefined");
+        setRegistrationError("Failed to register device. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error in device registration:", err);
+      // Log more detailed info for debugging
+      if (err instanceof Error) {
+        console.error("Error message:", err.message);
+        console.error("Error stack:", err.stack);
+      } else {
+        console.error("Unknown error type:", typeof err);
+      }
+      setRegistrationError(
+        err instanceof Error ? err.message : "Unknown error occurred"
+      );
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   const handleDeviceClick = (deviceId: string) => {
@@ -97,22 +138,69 @@ export default function DashboardSidebar() {
                       <DialogHeader>
                         <DialogTitle>Register New Device</DialogTitle>
                         <DialogDescription>
-                          Enter the device registration code to add a new device to your dashboard.
+                          Enter the device registration code to add a new device
+                          to your dashboard. For best results, use the format:
+                          <span className="font-bold"> deviceID:registrationCode</span>
                         </DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                          <Label htmlFor="registrationCode">Registration Code</Label>
-                          <Input 
-                            id="registrationCode" 
-                            placeholder="Enter code" 
-                            value={registrationCode} 
-                            onChange={(e) => setRegistrationCode(e.target.value)} 
+                          <Label htmlFor="registrationCode">
+                            Registration Code *
+                          </Label>
+                          <Input
+                            id="registrationCode"
+                            placeholder="Enter registration code"
+                            value={registrationCode}
+                            onChange={(e) =>
+                              setRegistrationCode(e.target.value)
+                            }
+                            required
                           />
                         </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="deviceName">
+                            Device Name (Optional)
+                          </Label>
+                          <Input
+                            id="deviceName"
+                            placeholder="My Living Room Sensor"
+                            value={deviceName}
+                            onChange={(e) =>
+                              setDeviceName(e.target.value)
+                            }
+                          />
+                        </div>
+                        
+                        <div className="grid gap-2">
+                          <Label htmlFor="location">
+                            Location (Optional)
+                          </Label>
+                          <Input
+                            id="location"
+                            placeholder="Living Room"
+                            value={location}
+                            onChange={(e) =>
+                              setLocation(e.target.value)
+                            }
+                          />
+                        </div>
+                        
+                        {registrationError && (
+                          <div className="text-sm text-red-500 mt-2">
+                            {registrationError}
+                          </div>
+                        )}
                       </div>
                       <DialogFooter>
-                        <Button onClick={handleRegisterDevice} type="submit">Register Device</Button>
+                        <Button 
+                          onClick={handleRegisterDevice} 
+                          type="submit"
+                          disabled={isRegistering}
+                        >
+                          {isRegistering ? "Registering..." : "Register Device"}
+                        </Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
