@@ -3,15 +3,18 @@ WORKDIR /app
 
 # Copy everything
 COPY . ./
-# Restore as distinct layers
-RUN dotnet restore
-# Build and publish a release
-RUN dotnet publish -o out
+# Restore as distinct layers with explicit project reference
+RUN dotnet restore dotnet-server.csproj
+# Build and publish with explicit project reference
+RUN dotnet publish dotnet-server.csproj -c Release -o out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/out .
-RUN ls -a
+COPY --from=build /app/appsettings.json .
+COPY --from=build /app/appsettings.Development.json .
+RUN ls -la
 EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
 ENTRYPOINT ["dotnet", "dotnet-server.dll"]

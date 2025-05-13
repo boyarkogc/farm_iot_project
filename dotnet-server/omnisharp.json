@@ -1,0 +1,26 @@
+{
+  "MSBuild": {
+    "UseLegacySdkResolver": false,
+    "enabled": true,
+    "EnablePackageAutoRestore": true,
+    "LoadProjectsOnDemand": true
+  },
+  "RoslynExtensionsOptions": {
+    "enableAnalyzersSupport": true,
+    "enableImportCompletion": true,
+    "EnableDecompilationSupport": true
+  },
+  "script": {
+    "defaultTargetFramework": "net8.0",
+    "enableScriptNuGetReferences": true
+  },
+  "FormattingOptions": {
+    "enableEditorConfigSupport": true,
+    "NewLine": "\n"
+  },
+  "fileOptions": {
+    "defaultDotNetCliProject": "dotnet-server.csproj",
+    "excludeModifiers": [],
+    "excludeSymbolsInCodeDefinition": true
+  }
+}

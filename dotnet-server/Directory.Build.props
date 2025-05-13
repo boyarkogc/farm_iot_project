@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <DefaultProject>dotnet-server</DefaultProject>
+  </PropertyGroup>
+</Project>

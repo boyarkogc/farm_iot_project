@@ -18,4 +18,14 @@ export default defineConfig({
   optimizeDeps: {
     include: ["firebase/app", "firebase/auth"],
   },
+  // Add proxy for API requests to backend server
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

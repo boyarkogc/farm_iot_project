@@ -9,11 +9,12 @@ import React, {
 import SensorReading, {
   CondensedSensorReading,
 } from "@/interfaces/sensor_reading_interface";
-import { useDevices, Device } from "./device-context";
+import { useDevices, Device, Gateway } from "./device-context";
 
 // Define the shape of your context state
 interface DashboardContextState {
-  activeDevice: Device;
+  activeDevice: Device | null;
+  activeGateway: Gateway | null;
   activeFields: string[];
   activeChart: string;
   data: SensorReading[];
@@ -21,7 +22,8 @@ interface DashboardContextState {
   loading: boolean;
   error: string | null;
   setActiveChart: (chart: string) => void;
-  setActiveDevice: (device: Device) => void;
+  setActiveDevice: (device: Device | null) => void;
+  setActiveGateway: (gateway: Gateway | null) => void;
   getDeviceData: (deviceId: string) => void;
 }
 
@@ -50,12 +52,14 @@ export const DashboardContextProvider: React.FC<
     name: "Default Device",
     type: "unknown",
     location: "unknown",
+    gatewayId: "",
   };
 
   // Default to first device from the user's devices if available, otherwise use fallback
   const initialDevice = devices.length > 0 ? devices[0] : defaultDevice;
 
-  const [activeDevice, setActiveDevice] = useState<Device>(initialDevice);
+  const [activeDevice, setActiveDevice] = useState<Device | null>(initialDevice);
+  const [activeGateway, setActiveGateway] = useState<Gateway | null>(null);
   const [activeFields, setActiveFields] = useState(["temperature"]);
   const [activeChart, setActiveChart] = useState("temperature");
   const [data, setData] = useState<SensorReading[]>([]);
@@ -69,10 +73,12 @@ export const DashboardContextProvider: React.FC<
   useEffect(() => {
     if (
       devices.length > 0 &&
-      (activeDevice.id === "ABCD1234" ||
-        !devices.some((d) => d.id === activeDevice.id))
+      (activeDevice?.id === "ABCD1234" ||
+        !devices.some((d) => d.id === activeDevice?.id))
     ) {
       setActiveDevice(devices[0]);
+      // Clear any active gateway when defaulting to a device
+      setActiveGateway(null);
     }
   }, [devices]);
 
@@ -91,7 +97,14 @@ export const DashboardContextProvider: React.FC<
       });
   };
 
-  const getDeviceData = (deviceID: string) => {
+  const getDeviceData = (deviceID: string | undefined) => {
+    if (!deviceID) {
+      setData([]);
+      setCondensedData([]);
+      setLoading(false);
+      return;
+    }
+    
     const apiUrl = "http://localhost:8080";
     fetch(`${apiUrl}/devices/${deviceID}/readings?hours=1`)
       .then((response) => {
@@ -123,10 +136,12 @@ export const DashboardContextProvider: React.FC<
   // Value object that will be provided to consumers
   const value: DashboardContextState = {
     activeDevice,
+    activeGateway,
     activeFields,
     activeChart,
     setActiveChart,
     setActiveDevice,
+    setActiveGateway,
     getDeviceData,
     data,
     condensedData,
@@ -136,15 +151,26 @@ export const DashboardContextProvider: React.FC<
 
   // Load initial data
   useEffect(() => {
-    updateActiveFields(activeDevice.id);
-    getDeviceData(activeDevice.id);
+    if (activeDevice) {
+      updateActiveFields(activeDevice.id);
+      getDeviceData(activeDevice.id);
+    }
   }, []);
 
   // Reload data when active device changes
   useEffect(() => {
-    updateActiveFields(activeDevice.id);
-    getDeviceData(activeDevice.id);
+    if (activeDevice) {
+      updateActiveFields(activeDevice.id);
+      getDeviceData(activeDevice.id);
+    }
   }, [activeDevice]);
+  
+  // When a gateway is selected, clear the active device
+  useEffect(() => {
+    if (activeGateway) {
+      setActiveDevice(null);
+    }
+  }, [activeGateway]);
 
   return (
     <DashboardContext.Provider value={value}>
