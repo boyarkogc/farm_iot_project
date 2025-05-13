@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import ProtectedRoute from "./components/protected-route";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { Toaster } from "sonner";
 
 const Dashboard = lazy(() => import("@/components/dashboard"));
 function App() {
@@ -14,6 +15,7 @@ function App() {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <AuthProvider>
         <BrowserRouter>
+          <Toaster richColors position="top-right" />
           <NavBar />
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />

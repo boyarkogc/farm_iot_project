@@ -83,24 +83,64 @@ services:
     build:
       context: ./dotnet-server
       dockerfile: Dockerfile.dev
+    container_name: dotnet-server
+    restart: unless-stopped
     ports:
-      - 8080:8080
+      - "8080:8080"
     networks:
       - myapp-network
     volumes:
       - ./dotnet-server/config:/app/config:z
+      # Mount appsettings.json files directly
+      - ./dotnet-server/appsettings.json:/app/appsettings.json:z
+      - ./dotnet-server/appsettings.Development.json:/app/appsettings.Development.json:z
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/config/farm-iot-project-73d668215ab6.json
       - INFLUXDB_HOST=influxdb
       - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - influxdb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/weatherforecast"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+      
+  kapacitor:
+    image: kapacitor:1.6
+    container_name: kapacitor
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      - KAPACITOR_HOSTNAME=kapacitor
+      - KAPACITOR_INFLUXDB_0_URLS_0=http://influxdb:8086
+      - KAPACITOR_INFLUXDB_0_TOKEN=my-super-secret-admin-token # Match your InfluxDB token
+      - KAPACITOR_INFLUXDB_0_ORG=my-org
+      - KAPACITOR_INFLUXDB_0_DISABLE_SUBSCRIPTIONS=true
+      - KAPACITOR_INFLUXDB_0_DEFAULT_BUCKET=my-bucket
+      - KAPACITOR_LOGGING_LEVEL=DEBUG # Temporarily increase logging level
+      - KAPACITOR_SMTP_ENABLED=false
+      - KAPACITOR_SMTP_FROM=example@localhost
+      - KAPACITOR_SMTP_TO=example@localhost
+    volumes:
+      - kapacitor_data:/var/lib/kapacitor
+      - ./kapacitor/kapacitor.conf:/etc/kapacitor/kapacitor.conf:ro,z
+      - ./kapacitor/temperature_alert.tick:/etc/kapacitor/temperature_alert.tick:ro,z
+    depends_on:
+      - influxdb
+    networks:
+      - myapp-network
 volumes:
   node_modules_volume: {}
   auth_data:
   influxdb_data: # Docker-managed volume for InfluxDB data
   influxdb_config: # Docker-managed volume for InfluxDB configuration
   mosquitto_data: # Docker-managed volume for Mosquitto data
-  mosquitto_log:
-    # Docker-managed volume for Mosquitto logs
+  mosquitto_log: # Docker-managed volume for Mosquitto logs
+  kapacitor_data: # Docker-managed volume for Kapacitor data
 
 networks:
   myapp-network:

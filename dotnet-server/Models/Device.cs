@@ -19,10 +19,17 @@ namespace dotnet_server.Models
         [FirestoreProperty("location")]
         public string Location { get; set; } = string.Empty;
 
+        // GatewayId is essential to match the React frontend model
+        [FirestoreProperty("gatewayId")]
+        [JsonPropertyName("gatewayId")]
+        public string GatewayId { get; set; } = string.Empty;
+
         // These fields aren't in the React model but might be useful for the API
+        [FirestoreProperty("userId")]
         [JsonPropertyName("userId")]
         public string UserId { get; set; } = string.Empty;
 
+        [FirestoreProperty("isRegistered")]
         [JsonPropertyName("isRegistered")]
         public bool IsRegistered { get; set; } = true;
     }

@@ -1,0 +1,32 @@
+// temperature_alert.tick - Example alert for high temperature readings
+
+// Database retention policy
+// This tells Kapacitor which database to use with InfluxDB 1.x compatibility mode
+dbrp "my-bucket"."autogen"
+
+// Use batch mode which polls the database periodically
+var data = batch
+    // Query to get data from the my-bucket bucket
+    |query('SELECT mean(value) AS value FROM "my-bucket"."autogen"."temperature" WHERE time > now() - 5m GROUP BY time(1m), "host"')
+    .period(1m)  // Run this query every 1 minute
+    .every(30s)  // Offset/stagger queries every 30 seconds
+    .groupBy('host')  // Group results by the host tag
+
+// Define alert thresholds and actions
+var alert = data
+    |alert()
+        .id('high_temperature')  // Unique alert ID
+        .message('High temperature detected: {{ .Level }} - {{ index .Fields "value" }}°C on host {{ index .Tags "host" }}')
+        .info(lambda: "value" > 25)  // Info level threshold
+        .warn(lambda: "value" > 30)  // Warning level threshold
+        .crit(lambda: "value" > 35)  // Critical level threshold
+        // Log alerts to STDOUT (requires a filepath as argument)
+        .log('/dev/stdout')
+
+// Write alert status back to InfluxDB for storage and visualization
+alert
+    |influxDBOut()
+        .database('my-bucket')
+        .retentionPolicy('autogen')
+        .measurement('temperature_alerts')
+        .tag('type', 'temperature_alert')

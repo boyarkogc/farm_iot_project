@@ -31,5 +31,6 @@ firebase*
 dotnet-server/bin
 dotnet-server/obj
 dotnet-server/out
+**/Debug/**
 
 **/.claude/settings.local.json
