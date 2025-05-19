@@ -89,25 +89,18 @@ services:
       - "8080:8080"
     networks:
       - myapp-network
-    volumes:
-      - ./dotnet-server/config:/app/config:z
-      # Mount appsettings.json files directly
-      - ./dotnet-server/appsettings.json:/app/appsettings.json:z
-      - ./dotnet-server/appsettings.Development.json:/app/appsettings.Development.json:z
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/config/farm-iot-project-73d668215ab6.json
-      - INFLUXDB_HOST=influxdb
+      - GOOGLE_APPLICATION_CREDENTIALS=config/test-farm-iot-project-test-c7bb07ef83b2.json
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
     depends_on:
       - influxdb
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/weatherforecast"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/weatherforecast" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-      
+
   kapacitor:
     image: kapacitor:1.6
     container_name: kapacitor
@@ -140,7 +133,8 @@ volumes:
   influxdb_config: # Docker-managed volume for InfluxDB configuration
   mosquitto_data: # Docker-managed volume for Mosquitto data
   mosquitto_log: # Docker-managed volume for Mosquitto logs
-  kapacitor_data: # Docker-managed volume for Kapacitor data
+  kapacitor_data:
+    # Docker-managed volume for Kapacitor data
 
 networks:
   myapp-network:
