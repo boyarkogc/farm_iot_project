@@ -15,7 +15,7 @@ logging.basicConfig(
 MQTT_BROKER = "mosquitto"
 MQTT_PORT = 1883
 DEVICE_ID = "ABCD1234"
-DEVICE_ID_2 = "EDFG5678"
+DEVICE_ID_2 = "arduino-1747161653978"
 MQTT_TOPIC = f"sensors/{DEVICE_ID}/data"
 
 logging.debug("test1")

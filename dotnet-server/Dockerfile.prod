@@ -1,12 +1,16 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 COPY . ./
+RUN ls -la
 RUN dotnet restore dotnet-server.csproj
 RUN dotnet publish dotnet-server.csproj -c Release -o out
+RUN ls -la out/
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app/out .
 EXPOSE 8080
-ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
+ENV GOOGLE_APPLICATION_CREDENTIALS=config/farm-iot-project-73d668215ab6.json
 ENTRYPOINT ["dotnet", "dotnet-server.dll"]
