@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useDevices } from "./contexts/device-context";
 import { useDashboardContext } from "./contexts/dashboard-context";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -32,7 +32,7 @@ export default function GatewayInfo() {
   const [error, setError] = useState<string | null>(null);
 
   // API base URL
-  const API_BASE_URL = "http://localhost:8080";
+  const apiUrl = import.meta.env["VITE_BACKEND_URL"] || "http://localhost:8080";
 
   // Function to fetch pending registrations from the API
   const fetchPendingRegistrations = async () => {
@@ -43,7 +43,7 @@ export default function GatewayInfo() {
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/pending-registration?gatewayId=${activeGateway.id}`,
+        `${apiUrl}/api/pending-registration?gatewayId=${activeGateway.id}`,
         {
           headers: {
             Accept: "application/json",

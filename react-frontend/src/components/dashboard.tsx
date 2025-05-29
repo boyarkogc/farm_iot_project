@@ -24,6 +24,10 @@ function DashboardContent() {
     );
   }
 
+  if (!activeDevice) {
+    return <div className="ml-6 mr-2">No active device</div>;
+  }
+
   // Default device dashboard view
   return (
     <div className="ml-6 mr-2">

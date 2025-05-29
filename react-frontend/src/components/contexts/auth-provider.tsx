@@ -48,11 +48,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticating(true);
     try {
       // 1. Create the authentication user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
       // 2. Create a corresponding document in Firestore
       await createUserDocument(userCredential.user);
-      
+
       return userCredential;
     } catch (error) {
       console.error("Error during sign up:", error);
@@ -61,21 +65,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticating(false);
     }
   }
-  
+
   // Helper function to create user document in Firestore
   async function createUserDocument(user: User) {
     try {
       // Create a reference to the user document
       const userDocRef = doc(db, "users", user.uid);
-      
+
       // Create the user document with initial data
       await setDoc(userDocRef, {
-        display_name: user.displayName || user.email?.split('@')[0] || "New User",
+        display_name:
+          user.displayName || user.email?.split("@")[0] || "New User",
         email: user.email,
         created_at: new Date(),
-        last_login: new Date()
+        last_login: new Date(),
       });
-      
+
       console.log("User document created in Firestore:", user.uid);
     } catch (error) {
       console.error("Error creating user document:", error);
@@ -86,8 +91,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   async function login(email: string, password: string) {
     setIsAuthenticating(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
       // Update the last_login field in the user document
       try {
         const userDocRef = doc(db, "users", userCredential.user.uid);
@@ -95,7 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error) {
         console.error("Error updating last login:", error);
       }
-      
+
       return userCredential;
     } catch (error) {
       console.error("Error during login:", error);
@@ -113,29 +122,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      
+
       // If a user is logged in, ensure they have a Firestore document
       if (currentUser) {
         try {
           // Create a reference to check if the user document exists
           const userDocRef = doc(db, "users", currentUser.uid);
-          
-          // We don't need to check if the document exists here,
-          // as we're using merge: true to safely upsert the document
-          await setDoc(userDocRef, { 
-            last_login: new Date(),
-            // Include these fields only if it's a new document
-            ...(!userDocRef && {
-              display_name: currentUser.displayName || currentUser.email?.split('@')[0] || "User",
+
+          // Create or update user document with merge: true for safe upsert
+          await setDoc(
+            userDocRef,
+            {
+              display_name:
+                currentUser.displayName ||
+                currentUser.email?.split("@")[0] ||
+                "User",
               email: currentUser.email,
-              created_at: new Date()
-            })
-          }, { merge: true });
+              last_login: new Date(),
+              // Only set created_at if this is a new document (merge won't overwrite existing)
+              created_at: new Date(),
+            },
+            { merge: true },
+          );
         } catch (error) {
           console.error("Error ensuring user document exists:", error);
         }
       }
-      
+
       setIsAuthReady(true); // This should be set to true when auth state is determined
     });
 

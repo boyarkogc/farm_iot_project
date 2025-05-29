@@ -1,0 +1,12 @@
+bin/
+obj/
+out/
+.git/
+.vscode/
+*.log
+.vs/
+.idea/
+*.swp
+*.tmp
+Dockerfile*
+.dockerignore

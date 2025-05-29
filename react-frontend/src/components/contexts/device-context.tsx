@@ -255,7 +255,7 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Define API base URL for all requests
-  const API_BASE_URL = "http://localhost:8080";
+  const apiUrl = import.meta.env["VITE_BACKEND_URL"] || "http://localhost:8080";
 
   // Function to register a gateway with a registration code
   const registerGateway = async (
@@ -304,7 +304,7 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
       console.log("Sending gateway registration data:", requestData);
 
       // Use the API base URL constant - this endpoint will need to be implemented on the server
-      const response = await fetch(`${API_BASE_URL}/api/register-gateway`, {
+      const response = await fetch(`${apiUrl}/api/register-gateway`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -408,7 +408,7 @@ export function DeviceProvider({ children }: { children: React.ReactNode }) {
       console.log("Sending request data:", requestData);
 
       // Use the API base URL constant
-      const response = await fetch(`${API_BASE_URL}/api/register-device`, {
+      const response = await fetch(`${apiUrl}/api/register-device`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

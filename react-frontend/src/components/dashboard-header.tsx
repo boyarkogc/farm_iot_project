@@ -10,13 +10,15 @@ export default function DashboardHeader() {
   const { updateDeviceName } = useDevices();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editingName, setEditingName] = useState(activeDevice.name || "");
+  const [editingName, setEditingName] = useState(
+    activeDevice ? activeDevice.name : "",
+  );
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleEditToggle = () => {
     if (!isEditing) {
       // Start editing
-      setEditingName(activeDevice.name || "");
+      setEditingName(activeDevice ? activeDevice.name : "");
       setIsEditing(true);
     } else {
       // Cancel editing
@@ -26,7 +28,7 @@ export default function DashboardHeader() {
 
   const handleNameSave = async () => {
     if (editingName.trim() === "") return;
-
+    if (!activeDevice) return;
     setIsUpdating(true);
     try {
       await updateDeviceName(activeDevice.id, editingName.trim());
@@ -69,7 +71,9 @@ export default function DashboardHeader() {
         </div>
       ) : (
         <div className="flex items-center gap-2 group">
-          <h1 className="text-2xl">{activeDevice.name || "<No name>"}</h1>
+          <h1 className="text-2xl">
+            {activeDevice ? activeDevice.name : "<No name>"}
+          </h1>
           <Button
             variant="ghost"
             size="icon"
@@ -83,7 +87,7 @@ export default function DashboardHeader() {
       <Button
         variant="outline"
         className="m-2"
-        onClick={() => getDeviceData(activeDevice.id)}
+        onClick={() => (activeDevice ? getDeviceData(activeDevice.id) : null)}
         disabled={isUpdating}
       >
         Refresh <RefreshCw className="ml-2 h-4 w-4" />

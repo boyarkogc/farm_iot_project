@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --upgrade pip -r requirements.txt
 
 # Copy the simulator script and any other necessary files
 # from the host machine into the container at /app
-COPY simulator.py ./
+COPY . .
 # If you have other helper files, copy them too, or use COPY . .
 
 # Make port 80 available to the world outside this container
@@ -24,6 +24,6 @@ COPY simulator.py ./
 
 # Define environment variables if needed (optional, see note below)
 # ENV MQTT_BROKER=mosquitto
-
+ENV MQTT_BROKER_HOST=34.53.7.133
 # Run simulator.py when the container launches
 CMD ["python", "./simulator.py"]

@@ -34,3 +34,12 @@ dotnet-server/out
 **/Debug/**
 
 **/.claude/settings.local.json
+
+#Certs
+ca.key
+ca.crt
+data-simulator/client.key
+data-simulator/client.csr
+data-simulator/client.crt
+data-simulator/ca.srl
+data-simulator/server-ca.crt
