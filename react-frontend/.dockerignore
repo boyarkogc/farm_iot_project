@@ -14,4 +14,7 @@ Dockerfile
 
 # Environment variables (handle these securely, don't copy into image)
 .env
-.env.*
+# Allow .env.production but exclude other .env files
+.env.development
+.env.local
+.env.test

@@ -57,11 +57,38 @@ builder.Services.AddSingleton<InfluxDBClient>(sp =>
 {
     var logger = sp.GetRequiredService<ILogger<Program>>();
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var influxDbUrl = $"http://{configuration["influxdb-host"] ?? "localhost"}:8086";
+    
+    // Get host from environment or configuration
+    var influxDbHost = Environment.GetEnvironmentVariable("INFLUXDB_HOST") ?? configuration["influxdb-host"] ?? "localhost";
+    var influxDbUrl = configuration["InfluxDb:Url"];
+    
+    // Check if host is already a full URL (for cloud services)
+    if (influxDbHost.StartsWith("http://") || influxDbHost.StartsWith("https://"))
+    {
+        influxDbUrl = influxDbHost;
+    }
+    else if (string.IsNullOrEmpty(influxDbUrl) || influxDbUrl.Contains("${INFLUXDB_HOST}"))
+    {
+        // Either no URL configured or URL contains placeholder - build from host
+        if (string.IsNullOrEmpty(influxDbUrl))
+        {
+            influxDbUrl = $"http://{influxDbHost}:8086";
+        }
+        else
+        {
+            // Replace environment variable placeholder
+            influxDbUrl = influxDbUrl.Replace("${INFLUXDB_HOST}", influxDbHost);
+        }
+    }
+    
     var influxDbToken = configuration["influxdb-api-token"];
 
-    logger.LogInformation($"Using InfluxDB URL: {influxDbUrl}");
-    logger.LogInformation("Token " + influxDbToken);
+    logger.LogInformation("InfluxDB Configuration:");
+    logger.LogInformation("  URL: {Url}", influxDbUrl);
+    logger.LogInformation("  Token configured: {TokenConfigured}", !string.IsNullOrEmpty(influxDbToken));
+    logger.LogInformation("  INFLUXDB_HOST env: {InfluxHost}", Environment.GetEnvironmentVariable("INFLUXDB_HOST") ?? "Not set");
+    logger.LogInformation("  influxdb-host config: {InfluxHostConfig}", configuration["influxdb-host"] ?? "Not set");
+    
     return new InfluxDBClient(influxDbUrl, influxDbToken);
 });
 
@@ -85,6 +112,11 @@ else
     string? gcpProjectOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS");
     allowedOrigins = gcpProjectOrigins?.Split(',') ?? new[] { "https://example.com" };
 }
+
+// Log the allowed origins for debugging
+Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
+Console.WriteLine($"ALLOWED_ORIGINS env var: {Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")}");
+Console.WriteLine($"Allowed origins: {string.Join(", ", allowedOrigins)}");
 
 builder.Services.AddCors(options =>
 {
@@ -114,8 +146,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("allowReactFrontend");
+app.UseHttpsRedirection();
 //app.UseAuthorization();
 
 var summaries = new[]
@@ -422,6 +454,9 @@ app.MapPost("/api/register-gateway", async (
         return Results.BadRequest($"Error registering gateway: {ex.Message}");
     }
 });
+
+// Map device endpoints
+app.MapDeviceEndpoints();
 
 app.MapPost("/api/register-device", async (
     HttpContext httpContext,

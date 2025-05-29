@@ -25,13 +25,23 @@ public static class DeviceEndpoints
       return Results.Ok(devices);
     });
 
-    app.MapGet("devices/{deviceId}/fields", async (IDeviceService deviceService, string deviceId) =>
+    app.MapGet("/api/devices/{deviceId}/fields", async (IDeviceService deviceService, string deviceId, ILogger<Program> logger) =>
     {
-      var fields = await deviceService.GetAllFieldsByDeviceAsync(deviceId);
-      return Results.Ok(fields);
+      try
+      {
+        logger.LogInformation($"Getting fields for device: {deviceId}");
+        var fields = await deviceService.GetAllFieldsByDeviceAsync(deviceId);
+        logger.LogInformation($"Found {fields?.Count()} fields for device: {deviceId}");
+        return Results.Ok(fields);
+      }
+      catch (Exception ex)
+      {
+        logger.LogError(ex, $"Error getting fields for device {deviceId}: {ex.Message}");
+        return Results.Problem($"Error retrieving fields for device {deviceId}: {ex.Message}");
+      }
     });
 
-    app.MapGet("devices/{deviceId}/readings", async (IDeviceService deviceService,
+    app.MapGet("/api/devices/{deviceId}/readings", async (IDeviceService deviceService,
                     string deviceId,
                     int hours = 24) =>
     {

@@ -3,6 +3,8 @@ import time
 import json
 import random
 import logging
+import os
+import ssl
 
 # Configure the logger
 logging.basicConfig(
@@ -12,14 +14,22 @@ logging.basicConfig(
     filemode='a' # 'a' for append, 'w' for overwrite
 )
 
-MQTT_BROKER = "mosquitto"
-MQTT_PORT = 1883
+MQTT_BROKER_HOST = os.getenv('MQTT_BROKER_HOST', 'mosquitto')
+MQTT_PORT = 8883  # Changed to TLS port
 DEVICE_ID = "ABCD1234"
-DEVICE_ID_2 = "arduino-1747161653978"
+DEVICE_ID_2 = "arduino-1748272235877"
 MQTT_TOPIC = f"sensors/{DEVICE_ID}/data"
+MQTT_TOPIC_2 = f"sensors/{DEVICE_ID_2}/data"
+
 
 logging.debug("test1")
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+#secure 
+client.username_pw_set("mqtt_admin", "%VnPXyi56Gw$Lz#GLwAy")
+# Allow self-signed certificates by setting cert_reqs to CERT_NONE
+client.tls_set(ca_certs="server-ca.crt", certfile="client.crt", keyfile="client.key", cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2)
+client.tls_insecure_set(True)
+
 
 def on_connect(client, userdata, flags, reason_code, properties):
     print(f"Connected with result code {reason_code}")
@@ -28,7 +38,7 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe("$SYS/#")
 
 client.on_connect = on_connect
-client.connect(MQTT_BROKER, MQTT_PORT, 60)
+client.connect(MQTT_BROKER_HOST, MQTT_PORT, 60)
 client.loop_start() # Start network loop in background
 logging.debug("hello world")
 try:
@@ -54,16 +64,17 @@ try:
         payload = json.dumps({
             "device_id": DEVICE_ID_2,
             "location": "backyard",
+            "soil_moisture": soil_moisture,
             "temperature": temp,
             "timestamp": time.time() # Or use ISO format string
         })
-        result = client.publish(MQTT_TOPIC, payload)
+        result = client.publish(MQTT_TOPIC_2, payload)
         # result: [0, 1]
         status = result[0]
         if status == 0:
-            print(f"Send `{payload}` to topic `{MQTT_TOPIC}`")
+            print(f"Send `{payload}` to topic `{MQTT_TOPIC_2}`")
         else:
-            print(f"Failed to send message to topic {MQTT_TOPIC}")
+            print(f"Failed to send message to topic {MQTT_TOPIC_2}")
 
         time.sleep(10) # Publish every 10 seconds
 except KeyboardInterrupt:

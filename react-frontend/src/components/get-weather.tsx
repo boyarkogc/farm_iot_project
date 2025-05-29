@@ -10,10 +10,11 @@ export default function GetWeather() {
   useEffect(() => {
     // Use the environment variable configured during the build
     //const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:8080"; // Fallback just in case
-    const apiUrl = "http://localhost:8080";
+    const apiUrl =
+      import.meta.env["VITE_BACKEND_URL"] || "http://localhost:8080";
     console.log("point 1");
     //fetch(`${apiUrl}/weatherforecast`)
-    fetch(`${apiUrl}/devices/pi_dev_01/readings?hours=1`)
+    fetch(`${apiUrl}/api/devices/pi_dev_01/readings?hours=1`)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

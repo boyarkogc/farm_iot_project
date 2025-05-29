@@ -58,8 +58,8 @@ export function LoginForm({
                     </h1>
                     <p className="text-muted-foreground text-balance">
                       {isSignup
-                        ? "Sign up for an Acme Inc account"
-                        : "Login to your Acme Inc account"}
+                        ? "Sign up for an Farm IoT account"
+                        : "Login to your Farm IoT account"}
                     </p>
                   </div>
                   {error && (
