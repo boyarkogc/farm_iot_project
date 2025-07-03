@@ -1,4 +1,4 @@
-name: Deploy .NET Server to GCP
+name: Deploy .NET Server to GCP 
 
 on:
   push:
