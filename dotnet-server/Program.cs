@@ -27,9 +27,14 @@ builder.Logging.SetMinimumLevel(LogLevel.Information);
 var serviceAccountPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
 
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
-Console.WriteLine($"Service account path: {serviceAccountPath}");
-Console.WriteLine($"Directory exists: {Directory.Exists(Path.GetDirectoryName(serviceAccountPath))}");
-Console.WriteLine($"File exists: {System.IO.File.Exists(serviceAccountPath)}");
+Console.WriteLine($"Service account path: {serviceAccountPath ?? "Not set (using default credentials)"}");
+Console.WriteLine($"PORT environment variable: {Environment.GetEnvironmentVariable("PORT") ?? "Not set"}");
+
+if (!string.IsNullOrEmpty(serviceAccountPath))
+{
+    Console.WriteLine($"Directory exists: {Directory.Exists(Path.GetDirectoryName(serviceAccountPath))}");
+    Console.WriteLine($"File exists: {System.IO.File.Exists(serviceAccountPath)}");
+}
 
 // Initialize Firebase Admin SDK if not already initialized
 // if (FirebaseApp.DefaultInstance == null)
@@ -42,7 +47,22 @@ Console.WriteLine($"File exists: {System.IO.File.Exists(serviceAccountPath)}");
 //     });
 // }
 string projectId = builder.Configuration["GCP:ProjectId"];
-builder.Configuration.AddGoogleSecretManager(projectId);
+if (!string.IsNullOrEmpty(projectId))
+{
+    try
+    {
+        builder.Configuration.AddGoogleSecretManager(projectId);
+        Console.WriteLine($"Google Secret Manager configured for project: {projectId}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Warning: Could not configure Google Secret Manager: {ex.Message}");
+    }
+}
+else
+{
+    Console.WriteLine("Warning: GCP:ProjectId not configured, skipping Google Secret Manager");
+}
 
 // Register Firestore client for dependency injection
 builder.Services.AddSingleton<FirestoreDb>(sp =>
