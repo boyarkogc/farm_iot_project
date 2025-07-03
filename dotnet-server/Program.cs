@@ -46,23 +46,8 @@ if (!string.IsNullOrEmpty(serviceAccountPath))
 //         ProjectId = firebaseProjectId
 //     });
 // }
-string projectId = builder.Configuration["GCP:ProjectId"];
-if (!string.IsNullOrEmpty(projectId))
-{
-    try
-    {
-        builder.Configuration.AddGoogleSecretManager(projectId);
-        Console.WriteLine($"Google Secret Manager configured for project: {projectId}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Warning: Could not configure Google Secret Manager: {ex.Message}");
-    }
-}
-else
-{
-    Console.WriteLine("Warning: GCP:ProjectId not configured, skipping Google Secret Manager");
-}
+// Google Secret Manager removed - using environment variables for secrets instead
+Console.WriteLine("Using environment variables for configuration secrets");
 
 // Register Firestore client for dependency injection
 builder.Services.AddSingleton<FirestoreDb>(sp =>
@@ -101,7 +86,7 @@ builder.Services.AddSingleton<InfluxDBClient>(sp =>
         }
     }
     
-    var influxDbToken = configuration["influxdb-api-token"];
+    var influxDbToken = Environment.GetEnvironmentVariable("INFLUXDB_API_TOKEN") ?? configuration["influxdb-api-token"];
 
     logger.LogInformation("InfluxDB Configuration:");
     logger.LogInformation("  URL: {Url}", influxDbUrl);

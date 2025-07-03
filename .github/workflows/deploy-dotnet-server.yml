@@ -61,6 +61,9 @@ jobs:
           region: ${{ env.REGION }}
           image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}
           flags: '--service-account=${{ secrets.WIF_SERVICE_ACCOUNT }}'
+          env_vars: |
+            INFLUXDB_HOST=${{ secrets.INFLUXDB_HOST }}
+            INFLUXDB_API_TOKEN=${{ secrets.INFLUXDB_API_TOKEN }}
 
       - name: Show Output
         run: echo ${{ steps.deploy.outputs.url }}
