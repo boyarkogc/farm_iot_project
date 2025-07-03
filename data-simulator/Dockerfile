@@ -24,6 +24,6 @@ COPY . .
 
 # Define environment variables if needed (optional, see note below)
 # ENV MQTT_BROKER=mosquitto
-ENV MQTT_BROKER_HOST=34.53.7.133
+ENV MQTT_BROKER_HOST=mosquitto
 # Run simulator.py when the container launches
 CMD ["python", "./simulator.py"]
