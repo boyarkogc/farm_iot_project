@@ -17,7 +17,7 @@ logging.basicConfig(
 MQTT_BROKER_HOST = os.getenv('MQTT_BROKER_HOST', 'mosquitto')
 MQTT_PORT = 8883  # Changed to TLS port
 DEVICE_ID = "ABCD1234"
-DEVICE_ID_2 = "arduino-1748272235877"
+DEVICE_ID_2 = "arduino-1747161653978"
 MQTT_TOPIC = f"sensors/{DEVICE_ID}/data"
 MQTT_TOPIC_2 = f"sensors/{DEVICE_ID_2}/data"
 
@@ -27,7 +27,7 @@ client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 #secure 
 client.username_pw_set("mqtt_admin", "%VnPXyi56Gw$Lz#GLwAy")
 # Allow self-signed certificates by setting cert_reqs to CERT_NONE
-client.tls_set(ca_certs="server-ca.crt", certfile="client.crt", keyfile="client.key", cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2)
+client.tls_set(ca_certs="ca.crt", certfile="client.crt", keyfile="client.key", cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1_2)
 client.tls_insecure_set(True)
 
 
