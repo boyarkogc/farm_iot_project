@@ -24,6 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug Environment Variables
+        run: |
+          echo "PROJECT_ID: ${{ env.PROJECT_ID }}"
+          echo "SERVICE: ${{ env.SERVICE }}"
+          echo "REGION: ${{ env.REGION }}"
+          echo "Image will be: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'
