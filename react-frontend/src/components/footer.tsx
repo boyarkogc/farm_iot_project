@@ -7,6 +7,6 @@ export default function Footer() {
   };
   const formattedDate = today.toLocaleDateString("en-US", options);
   return (
-    <p className="text-center mt-16">{`2025 Greg Boyarko | Farm IoT Project | Last updated ${formattedDate}`}</p>
+    <p className="text-center mt-16">{`2025 Greg Boyarko | SyncSeed | Last updated ${formattedDate}`}</p>
   );
 }
