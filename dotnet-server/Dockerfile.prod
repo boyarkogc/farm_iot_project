@@ -12,5 +12,5 @@ COPY --from=build /app/out .
 EXPOSE 8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
-ENV GOOGLE_APPLICATION_CREDENTIALS=config/farm-iot-project-73d668215ab6.json
+# Remove GOOGLE_APPLICATION_CREDENTIALS - Cloud Run will use the service account automatically
 ENTRYPOINT ["dotnet", "dotnet-server.dll"]
