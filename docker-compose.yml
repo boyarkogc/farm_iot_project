@@ -28,10 +28,14 @@ services:
     container_name: mosquitto
     restart: unless-stopped
     ports:
-      - "1883:1883" # Standard MQTT port
-      # - "9001:9001" # Optional: MQTT over WebSockets
+      - "1883:1883" # Standard MQTT port (for backward compatibility)
+      - "8883:8883" # TLS MQTT port (production-like)
     volumes:
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:z # Mount custom config (read-only)
+      - ./mosquitto/config/mosquitto-tls.conf:/mosquitto/config/mosquitto.conf:z # Mount TLS config (read-only)
+      - ./data-simulator/ca.crt:/mosquitto/config/ca.crt:z # CA certificate
+      - ./data-simulator/client.crt:/mosquitto/config/server.crt:z # Server certificate
+      - ./data-simulator/client.key:/mosquitto/config/server.key:z # Server private key
+      - ./mosquitto/config/passwd:/mosquitto/config/passwd:z # Password file
       - mosquitto_data:/mosquitto/data # Persist MQTT data (retained messages, etc.)
       - mosquitto_log:/mosquitto/log # Persist MQTT logs
     networks:
@@ -43,6 +47,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro,z # Mount custom config (read-only)
+      - ./data-simulator/ca.crt:/etc/telegraf/ca.crt:z # CA certificate for TLS
+      - ./data-simulator/client.crt:/etc/telegraf/client.crt:z # Client certificate
+      - ./data-simulator/client.key:/etc/telegraf/client.key:z # Client private key
       # Optional: Mount Docker socket if you want Telegraf to collect Docker stats
       # - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
