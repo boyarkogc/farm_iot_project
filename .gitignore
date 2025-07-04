@@ -43,3 +43,6 @@ data-simulator/client.csr
 data-simulator/client.crt
 data-simulator/ca.srl
 data-simulator/server-ca.crt
+data-simulator/config.py
+data-simulator/certs/prod/client.crt
+data-simulator/certs/prod/client.key

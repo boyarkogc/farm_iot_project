@@ -67,6 +67,14 @@ services:
       context: ./data-simulator # Path to directory with Dockerfile and Python script
     depends_on:
       - mosquitto
+    environment:
+      - ENV=dev
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_PORT=8883
+      - MQTT_USERNAME=mqtt_admin
+      - MQTT_PASSWORD=%VnPXyi56Gw$Lz#GLwAy
+      - DEVICE_LOCATION=backyard
+      - PUBLISH_INTERVAL=10
     networks:
       - myapp-network
   # Firebase emulator removed - using real Firebase project for development now

@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY config.py .
+COPY simulator.py .
+
+# Copy production certificates (if needed)
+# Note: In production, you'll need to provide these files
+# You can either:
+# 1. Mount them as volumes: -v /path/to/certs:/app/certs
+# 2. Copy them at build time (less secure)
+# 3. Use cloud-native authentication
+
+# Create directory for certificates
+RUN mkdir -p /app/certs
+
+# Set environment to production
+ENV ENV=prod
+
+# Run the simulator
+CMD ["python", "simulator.py"]

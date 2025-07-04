@@ -5,30 +5,45 @@ import random
 import logging
 import os
 import ssl
+from config import Config
 
-# Configure the logger
-logging.basicConfig(
-    filename='app.log', 
-    level=logging.INFO, 
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='a' # 'a' for append, 'w' for overwrite
-)
+# Initialize configuration
+config = Config()
+device_config = config.get_device_config()
 
-MQTT_BROKER_HOST = os.getenv('MQTT_BROKER_HOST', 'mosquitto')
-MQTT_PORT = 8883  # Changed to TLS port
-DEVICE_ID = "ABCD1234"
-DEVICE_ID_2 = "arduino-1747161653978"
+# Setup device information
+DEVICE_ID = device_config['device_id_1']
+DEVICE_ID_2 = device_config['device_id_2']
+DEVICE_LOCATION = device_config['location']
+PUBLISH_INTERVAL = device_config['publish_interval']
+
 MQTT_TOPIC = f"sensors/{DEVICE_ID}/data"
 MQTT_TOPIC_2 = f"sensors/{DEVICE_ID_2}/data"
 
+logging.info(f"Starting data simulator for devices: {DEVICE_ID}, {DEVICE_ID_2}")
+logging.info(f"Publishing to location: {DEVICE_LOCATION} every {PUBLISH_INTERVAL} seconds")
 
-logging.debug("test1")
+# Setup MQTT client
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-#secure 
-client.username_pw_set("mqtt_admin", "%VnPXyi56Gw$Lz#GLwAy")
-# Allow self-signed certificates by setting cert_reqs to CERT_NONE
-client.tls_set(ca_certs="ca.crt", certfile="client.crt", keyfile="client.key", cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLSv1_2)
-client.tls_insecure_set(True)
+client.username_pw_set(config.mqtt_username, config.mqtt_password)
+
+# Configure TLS if enabled
+if config.use_tls:
+    try:
+        client.tls_set(
+            ca_certs=config.ca_certs, 
+            certfile=config.certfile, 
+            keyfile=config.keyfile, 
+            cert_reqs=ssl.CERT_NONE if config.tls_insecure else ssl.CERT_REQUIRED, 
+            tls_version=ssl.PROTOCOL_TLSv1_2
+        )
+        if config.tls_insecure:
+            client.tls_insecure_set(True)
+        logging.info("TLS configured successfully")
+    except Exception as e:
+        logging.error(f"Failed to configure TLS: {e}")
+        if config.environment == 'prod':
+            raise  # Fail fast in production
 
 
 def on_connect(client, userdata, flags, reason_code, properties):
@@ -37,48 +52,54 @@ def on_connect(client, userdata, flags, reason_code, properties):
     # reconnect then subscriptions will be renewed.
     client.subscribe("$SYS/#")
 
+def publish_sensor_data(device_id, topic, location):
+    """Publish sensor data for a specific device"""
+    soil_moisture = round(random.uniform(20.0, 80.0), 2)
+    temp = round(random.uniform(40.0, 100.0), 2)
+    payload = json.dumps({
+        "device_id": device_id,
+        "location": location,
+        "soil_moisture": soil_moisture,
+        "temperature": temp,
+        "timestamp": time.time()
+    })
+    
+    result = client.publish(topic, payload)
+    status = result[0]
+    if status == 0:
+        logging.info(f"Published data for {device_id}: temp={temp}°F, moisture={soil_moisture}%")
+        print(f"✓ {device_id}: temp={temp}°F, moisture={soil_moisture}%")
+    else:
+        logging.error(f"Failed to publish data for {device_id}")
+        print(f"✗ Failed to publish data for {device_id}")
+
 client.on_connect = on_connect
-client.connect(MQTT_BROKER_HOST, MQTT_PORT, 60)
-client.loop_start() # Start network loop in background
-logging.debug("hello world")
+
 try:
+    logging.info(f"Connecting to MQTT broker at {config.mqtt_broker_host}:{config.mqtt_port}")
+    client.connect(config.mqtt_broker_host, config.mqtt_port, 60)
+    client.loop_start()
+    
+    logging.info("Data simulator started successfully")
+    print(f"🚀 Data simulator started - Environment: {config.environment}")
+    print(f"📡 Publishing to: {config.mqtt_broker_host}:{config.mqtt_port}")
+    print(f"🔄 Interval: {PUBLISH_INTERVAL} seconds")
+    print("Press Ctrl+C to stop")
+    
     while True:
-        soil_moisture = round(random.uniform(20.0, 80.0), 2)
-        temp = round(random.uniform(40.0, 100.0), 2)
-        payload = json.dumps({
-            "device_id": DEVICE_ID,
-            "location": "backyard",
-            "soil_moisture": soil_moisture,
-            "temperature": temp,
-            "timestamp": time.time() # Or use ISO format string
-        })
-        result = client.publish(MQTT_TOPIC, payload)
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            print(f"Send `{payload}` to topic `{MQTT_TOPIC}`")
-        else:
-            print(f"Failed to send message to topic {MQTT_TOPIC}")
-
-        temp = round(random.uniform(40.0, 100.0), 2)
-        payload = json.dumps({
-            "device_id": DEVICE_ID_2,
-            "location": "backyard",
-            "soil_moisture": soil_moisture,
-            "temperature": temp,
-            "timestamp": time.time() # Or use ISO format string
-        })
-        result = client.publish(MQTT_TOPIC_2, payload)
-        # result: [0, 1]
-        status = result[0]
-        if status == 0:
-            print(f"Send `{payload}` to topic `{MQTT_TOPIC_2}`")
-        else:
-            print(f"Failed to send message to topic {MQTT_TOPIC_2}")
-
-        time.sleep(10) # Publish every 10 seconds
+        # Publish data for both devices
+        publish_sensor_data(DEVICE_ID, MQTT_TOPIC, DEVICE_LOCATION)
+        publish_sensor_data(DEVICE_ID_2, MQTT_TOPIC_2, DEVICE_LOCATION)
+        
+        time.sleep(PUBLISH_INTERVAL)
+        
 except KeyboardInterrupt:
-    print("Exiting...")
+    print("\n🛑 Stopping data simulator...")
+    logging.info("Data simulator stopped by user")
+except Exception as e:
+    print(f"❌ Error: {e}")
+    logging.error(f"Data simulator error: {e}")
 finally:
     client.loop_stop()
     client.disconnect()
+    logging.info("MQTT client disconnected")
